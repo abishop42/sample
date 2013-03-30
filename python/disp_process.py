@@ -8,12 +8,16 @@ class ProcessMonitor():
 		self.state = StateReader()
 		self.out = sys.stdout
 
-	def display_state(self):
-		self.out.write(str(self.state.read_values()) + '\n')
-
 	def show(self):
+		first_time = False
 		while True:
-			self.display_state()
+			values = self.state.read_values()
+			if not first_time:
+				self.out.write(",".join(values.keys()))
+				self.out.write("\n")
+				first_time = True
+			self.out.write(",".join([str(values[key]) for key in values]))
+			self.out.write("\n")
 			sleep(1)
 
 
@@ -30,7 +34,8 @@ class StateReader():
 		results = {}
 		for f in self.functions:
 			#What about same keys?
-			results.update(self.get_values(getattr(psutil, f)()))
+			new_values = self.get_values(getattr(psutil, f)())
+			results.update({"%s_%s"%(f,k):new_values[k] for k in new_values.keys()})
 		return results
 
 if __name__ == "__main__":
