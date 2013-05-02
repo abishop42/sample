@@ -1,7 +1,7 @@
 import requests
 import re
   
-from BeautifulSoup import BeautifulSoup, Tag
+from BeautifulSoup import BeautifulSoup, Tag,  NavigableString 
 
 
 def remove_formating(source, invalid_tags):
@@ -76,12 +76,9 @@ class Form:
 
 		
 
-
 class Runner:
 	def __init__(self, name="", url=""):
-		self.name = name
-		self.url = url
-	
+
 		self.data = {}
 		self.form_data = []
 
@@ -95,9 +92,7 @@ class Runner:
 				else:
 					self.data[MAIN_DATA_KEYS[k]] = remove_formating(html[k], INVALID_HTML_TAGS)
 		
-		self.name = self.data["name"]
-		self.url = self.data["url"]
-
+		
 		rows = html.findAll('tr')
 
 		for r in rows:
@@ -121,7 +116,8 @@ class Runner:
 			print f
 
 	def to_string(self):
-		return "\t".join([self.name, self.data["barrier"], self.data["weight"]])
+		keys = ['barrier', 'name', 'weight', 'career_runs']
+		return "\t".join(['%s'%self.data[k] for k in keys])
 
 	def __str__(self):
 		return self.to_string()
@@ -147,35 +143,83 @@ class Race:
 	def __str__(self):
 		return "\n".join(['-'*10, self.name, '-'*10] + [r.to_string() for r in self.horses])
 
+class RaceMeeting:
+	def __init__(self):
+		self.track_details = None
+		self.races = []
+
+
+	def __str__(self):
+		return "\n".join(["%s : %s"%(k,self.track_details[k]) for k in self.track_details.keys()])
+
+	def process_track_details(self, html_data):
+		self.track_details = {}
+		modules = soup.findAll('div', {'class':'Module'})
+		for mod in modules:
+				if mod.findChild('h3').text == 'Track Details':
+
+					self.track_details['track_conditon'] = mod.find('span').text
+
+					split_keys = [item.text for item in mod.find('div',{'class':'moduleItem'}).findAll('b')]
+					split_text = mod.find('div',{'class':'moduleItem'}).text
+					#move this into global function?
+					for i in range(len(split_keys)):
+						start_pos = split_text.find(split_keys[i]) + len(split_keys[i])
+						end_pos = split_text.find(split_keys[i + 1]) if i + 1 < len(split_keys) else len(split_text)
+						self.track_details[split_keys[i].strip(':')] = split_text[start_pos:end_pos]
+
+					weather = mod.find('div', {'class':'weatherInfo'})
+					
+					if not weather ==  None:
+						temp_cel = weather.find('div', {'id':'tempCel'}).text.replace('&deg;',' degrees ')
+						temp_feels_like = temp_cel[temp_cel.find('(')+1:temp_cel.find(')')]
+						temp_cel = temp_cel[0:temp_cel.find('|')]
+
+						r = [i.strip('\r\n').replace('&nbsp;', ' ') for i in weather.contents if isinstance(i, NavigableString)]                                                                                                                        
+						r = [i for i in r if len(i) > 2]
+						self.track_details['weather_details'] = {'current_temp':temp_cel,'feels_like':temp_feels_like, 'details:':r[0]}
+						weather_info = r[1].strip().split('  ')
+						for i in weather_info:
+							split = i.split(':')
+							self.track_details['weather_details'][split[0]] = " ".join(split[1:])
+		
+	
+
 def get_page(url):
 	r = requests.get(url)
 	return BeautifulSoup(r.content)
 
 
-if __name__ == "__main__":
-	races = []
 
+if __name__ == "__main__":
+	
 	#need to add arguments here at some point
+
+	race_meet = RaceMeeting() 
+	single_race = True
+	test_run = True
 	base_url = "http://www.puntersparadise.com.au"
-	next_race = "/form-guide/Warrnambool_21565/Hammonds-Paints-0---120-Hurdle_152062/"
-	soup = get_page(base_url  + next_race)
+	next_race = "/form-guide/Bendigo_21604/Bendigo-Property-Services-SV-3YO-Fillies-Maiden-Plate_152390/"
+	soup = get_page(base_url  + next_race) if test_run == False else BeautifulSoup(open('race_1.html'))
 
 	while True:
 	
 		next_race = soup.find('a',{'class':'nextRace hoverTrigger'})
 
-	
+		if race_meet.track_details == None:
+			race_meet.process_track_details(soup)
+
 		race = Race(soup.find('h2').text)
 		race.process_html(soup)
 
-		races.append(race)
+		race_meet.races.append(race)
 
-		if next_race == None:
+		if next_race == None or single_race == True:
 			break
 		else:
 			soup = get_page(base_url + next_race['href'])
 		
-
-	for r in races:
+	print race_meet
+	for r in race_meet.races:
 		print r
 
