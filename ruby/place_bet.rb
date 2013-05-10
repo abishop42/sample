@@ -2,32 +2,34 @@ require 'rubygems'
 require 'selenium-webdriver'
 
 
-def get_next_race(browser, values)
-	puts "get next race to run"
-	div = browser.find_element(:id, 'NEXTTORACE-tab')
-	headers = div.find_elements(:tag_name, 'h3')
-	headers[0].find_element(:tag_name,'a').click
-end
 
 
 
 class Browser_Test
 	
-	attr_accessor :browser, :methods
+	attr_accessor :browser
   	
   	def initialize(t)
 		@browser = Selenium::WebDriver.for t
-		@methods = {}
 	end
 
 
-	def add_method(name, function)
-		@methods[name] = function
+	def get_next_race()
+		puts "getting next race to run"
+
+		divs = @browser.find_elements(:id, 'NEXTTORACE-tab')
+		
+		if divs.count == 1
+			headers = divs[0].find_elements(:tag_name, 'h3')
+			headers[0].find_element(:tag_name,'a').click
+		else
+			divs = @browser.find_elements(:id,"content-id_SBT_RacingNextHorse_SBT_RacingNextHorseContent")
+			if divs.count == 1
+				divs[0].find_element(:tag_name,'a').click	
+			end
+		end
 	end
 
-	def call_method(name, values)
-		@methods[name].call(@browser, values)
-	end
 
 
 	def visit(url)
@@ -51,7 +53,7 @@ end
 if __FILE__ == $0
 	puts "meh"
 	bt = Browser_Test.new(:firefox)
-	bt.add_method('get_next_race', method(:get_next_race))
 	bt.visit("http://www.sportsbet.com.au")
-	bt.call_method('get_next_race', "some_value")
+	bt.visit("http://www.sportsbet.com.au/horse-racing/australia-nz/caulfield/race-3-707740.html?LeftNav")
+	bt.get_next_race()
 end
