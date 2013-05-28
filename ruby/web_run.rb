@@ -367,7 +367,7 @@ test << UserStep.new("sleep",60)
  
 browser = WebSurfer.new
 todo = [
-  google_login,
+  #google_login,
   search_travel,
   search_hash_and_equals,
   yahoo_cars_netbank_register,

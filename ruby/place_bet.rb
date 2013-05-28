@@ -30,8 +30,6 @@ class Browser_Test
 		end
 	end
 
-
-
 	def visit(url)
 		begin
 			puts "going to #{url}"

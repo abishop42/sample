@@ -8,23 +8,20 @@ def google_search(term,browser)
 	results = []
 	begin
 		browser.get google
-		sleep 3
-	# 	browser.text_field(:id,"gbqfq").set search_term
-	# 	puts "google search term set -> #{search_term}"
-	# 	sleep 5
-	# 	@browser.button(:id,"gbqfb").click
-	# 	puts "google search term button clicked"
-	# 	sleep 20
-	# 	count = @browser.divs(:id,"ires")[0].lis.count
-	# 	while count > 0
-	# 		pos = count - 1
-	# 		results << @browser.divs(:id,"ires")[0].lis[pos].link.href
-	# 		count = pos
-	# 	end
-	# rescue Watir::Exception::UnknownObjectException
-	# 	puts "something busted therefore given up on this search"
+		sleep 5
+	 	#browser.find_element(:id,"gbqfq").sendKeys(term)
+	 	#sleep 5
+	 	#@browser.find_element(:id,"gbqfb").click
+	 	#sleep 5
+	 	#count = @browser.find_element(:id,"ires")[0].lis.count
+	 	#while count > 0
+	 	#	pos = count - 1
+	 	#	results << @browser.find_element(:id,"ires")[0].lis[pos].link.href
+	 	#	count = pos
+	 	#end
 	rescue => e
-	 	puts "i have not sure what I was todo therefore i am back"
+	 	puts "i have gone wrong"
+	 	puts e.backtrace
 	end
 	results
 end
@@ -33,30 +30,24 @@ def bing_search(term,browser)
 	puts "bing_search"
 	bing = "www.bing.com"
 	results = []
-	puts browser.current_url
 	begin
-	# 	bing = "www.bing.com"
-	# 	puts "going to #{bing}"
 		browser.get bing
-		sleep 3
-	# 	browser.text_field(:id,"sb_form_q").set search_term
-	# 	puts "bing search term set -> #{search_term}"
-	# 	sleep 5
-	# 	@browser.button(:id,"sb_form_go").click
-	# 	puts "bing search term button clicked"
-	# 	sleep 20
-	# 	puts @browser.divs(:id,"results").count
-	# 	count = @browser.divs(:id,"results").uls.count
-	# 	puts "results counted #{count}"
-	# 	while count > 0
-	# 		pos = count - 1
-	# 		results << @browser.divs(:id,"wg0")[0].uls[pos].link.href
-	# 		count = pos
-	# 	end
-	# rescue Watir::Exception::UnknownObjectException => e
-	# 	puts "something busted therefore given up on this search"
+		sleep 5
+	 	#browser.find_element(:id,"sb_form_q").sendKeys(term)
+	 	#sleep 5
+	 	#@browser.find_element(:id,"sb_form_go").click
+	 	#sleep 5
+	 	#puts @browser.find_element(:id,"results").count
+	 	#count = @browser.find_element(:id,"results").uls.count
+	 	#puts "results counted #{count}"
+	 	#while count > 0
+	 	#	pos = count - 1
+	 	#	results << @browser.find_element(:id,"wg0")[0].uls[pos].link.href
+	 	#	count = pos
+	 	#end
 	rescue => e
-	 	puts "somthing has happend, returning to you regular scheduled program"
+	 	puts "somthing has happend"
+	 	puts e.backtrace
 	end
 	results
 end
@@ -81,10 +72,11 @@ class Browser_Test
 	def visit(url)
 		begin
 			puts "going to #{url}"
-			@browser.goto url
+			@browser.get url
 			sleep 15	
 		rescue Selenium::WebDriver::Error::WevbDriverError => e
 			puts "I could not find, therefore I look for something else"
+			puts e.backtrace
 		rescue => e
 			puts "i have waited too long therefore I give up"			
 		end
@@ -95,10 +87,11 @@ class Browser_Test
 	end
 end
 
-a = Browser_Test.new (:ie)
+a = Browser_Test.new (:firefox)
 
 a.add_engine("google",method(:google_search))
 a.add_engine("bing",method(:bing_search))
 
-a.search("www.nba.com","google")
-a.search("www.nba.com","bing")
+a.visit("http://www.theage.com.au")
+a.search("http://www.nba.com","google")
+a.search("http://www.nba.com","bing")
